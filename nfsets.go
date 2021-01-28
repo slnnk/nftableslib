@@ -56,6 +56,7 @@ type SetFuncs interface {
 	GetSetElements(string) ([]nftables.SetElement, error)
 	SetAddElements(string, []nftables.SetElement) error
 	SetDelElements(string, []nftables.SetElement) error
+	Sync() error
 }
 
 type nfSets struct {
@@ -200,6 +201,22 @@ func (nfs *nfSets) SetDelElements(name string, elements []nftables.SetElement) e
 	}
 
 	return fmt.Errorf("set %s does not exist", name)
+}
+
+func (nfs *nfSets) Sync() error {
+	sets, err := nfs.conn.GetSets(nfs.table)
+	if err != nil {
+		return err
+	}
+	for _, set := range sets {
+		if _, ok := nfs.sets[set.Name]; !ok {
+			nfs.Lock()
+			nfs.sets[set.Name] = set
+			nfs.Lock()
+		}
+	}
+
+	return nil
 }
 
 func newSets(conn NetNS, t *nftables.Table) SetsInterface {

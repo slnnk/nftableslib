@@ -235,6 +235,10 @@ func (nft *nfTables) Sync(familyType nftables.TableFamily) error {
 				if err := nt.Chains().Sync(); err != nil {
 					return err
 				}
+				// Sync synchronizes all sets discovered in the table
+				if err := nt.Sets().Sync(); err != nil {
+					return err
+				}
 			}
 		}
 	}
